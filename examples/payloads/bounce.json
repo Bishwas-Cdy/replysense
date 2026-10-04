@@ -1,0 +1,5 @@
+{
+  "from_email": "mailer-daemon@example.com",
+  "subject": "Delivery Status Notification (Failure)",
+  "body": "550 5.1.1 Address not found. The recipient was rejected as user unknown."
+}

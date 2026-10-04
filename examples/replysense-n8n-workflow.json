@@ -1,0 +1,83 @@
+{
+  "name": "ReplySense - Inbound Reply Routing Example",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "replysense-demo",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Inbound Reply Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-600, 100],
+      "webhookId": "replysense-demo"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/webhooks/reply",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { from_email: $json.body?.from_email || $json.from_email, subject: $json.body?.subject || $json.subject, body: $json.body?.body || $json.body, received_at: $json.body?.received_at || $json.received_at } }}",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Analyze with ReplySense",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-360, 100]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [{"leftValue": "={{ $json.classification }}", "rightValue": "INTERESTED", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "INTERESTED"},
+            {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [{"leftValue": "={{ $json.classification }}", "rightValue": "MEETING_REQUEST", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "MEETING_REQUEST"},
+            {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [{"leftValue": "={{ $json.classification }}", "rightValue": "QUESTION", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "QUESTION"},
+            {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [{"leftValue": "={{ $json.classification }}", "rightValue": "NOT_NOW", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "NOT_NOW"},
+            {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [{"leftValue": "={{ $json.classification }}", "rightValue": "WRONG_PERSON", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "WRONG_PERSON"},
+            {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [{"leftValue": "={{ $json.classification }}", "rightValue": "UNSUBSCRIBE", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "UNSUBSCRIBE"},
+            {"conditions": {"options": {"caseSensitive": true, "typeValidation": "strict"}, "conditions": [{"leftValue": "={{ $json.classification }}", "rightValue": "BOUNCE", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "BOUNCE"}
+          ]
+        },
+        "options": {"fallbackOutput": "extra"}
+      },
+      "id": "3",
+      "name": "Route by Classification",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [-100, 100]
+    },
+    {"parameters": {}, "id": "4", "name": "Human Review - Interested", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [220, -260]},
+    {"parameters": {}, "id": "5", "name": "Human Review - Meeting", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [220, -160]},
+    {"parameters": {}, "id": "6", "name": "Human Review - Question", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [220, -60]},
+    {"parameters": {}, "id": "7", "name": "Create Follow-up Task", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [220, 40]},
+    {"parameters": {}, "id": "8", "name": "Start Enrichment Workflow", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [220, 140]},
+    {"parameters": {}, "id": "9", "name": "Add to Suppression List", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [220, 240]},
+    {"parameters": {}, "id": "10", "name": "Mark Email Invalid", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [220, 340]},
+    {"parameters": {}, "id": "11", "name": "Manual Triage", "type": "n8n-nodes-base.noOp", "typeVersion": 1, "position": [220, 440]}
+  ],
+  "pinData": {},
+  "connections": {
+    "Inbound Reply Webhook": {"main": [[{"node": "Analyze with ReplySense", "type": "main", "index": 0}]]},
+    "Analyze with ReplySense": {"main": [[{"node": "Route by Classification", "type": "main", "index": 0}]]},
+    "Route by Classification": {"main": [
+      [{"node": "Human Review - Interested", "type": "main", "index": 0}],
+      [{"node": "Human Review - Meeting", "type": "main", "index": 0}],
+      [{"node": "Human Review - Question", "type": "main", "index": 0}],
+      [{"node": "Create Follow-up Task", "type": "main", "index": 0}],
+      [{"node": "Start Enrichment Workflow", "type": "main", "index": 0}],
+      [{"node": "Add to Suppression List", "type": "main", "index": 0}],
+      [{"node": "Mark Email Invalid", "type": "main", "index": 0}],
+      [{"node": "Manual Triage", "type": "main", "index": 0}]
+    ]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "9a75940d-233e-4d4f-9607-e2ac678a54db",
+  "meta": {"templateCredsSetupCompleted": true},
+  "tags": []
+}

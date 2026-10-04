@@ -1,0 +1,13 @@
+services:
+  replysense:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      REPLYSENSE_DATABASE_URL: sqlite:////data/replysense.db
+    volumes:
+      - replysense-data:/data
+
+volumes:
+  replysense-data:
+
